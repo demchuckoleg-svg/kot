@@ -20,7 +20,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import java.util.Locale;
 import java.util.Random;
 
 public class MainActivity extends Activity implements SensorEventListener {
@@ -39,11 +38,13 @@ public class MainActivity extends Activity implements SensorEventListener {
     private final float[] magnetic = new float[3];
     private final float[] rotationMatrix = new float[9];
     private final float[] orientation = new float[3];
+    private final Random random = new Random();
     private float heading;
-    private int target = new Random().nextInt(360);
+    private int target = random.nextInt(360);
     private int score;
     private boolean found;
     private boolean hasHeading;
+    private boolean firstTargetReady;
     private TextView headingText;
     private TextView statusText;
     private TextView targetText;
@@ -93,11 +94,10 @@ public class MainActivity extends Activity implements SensorEventListener {
         cardParams.topMargin = dp(22);
         root.addView(targetCard, cardParams);
 
-        targetText = text("КОТ ПРЯЧЕТСЯ НА СЕВЕРЕ", 12, MUTED, true);
-        targetText.setText("КОТ ПРЯЧЕТСЯ НА " + compassName(target).toUpperCase(Locale.ROOT));
+        targetText = text("КОТ ГДЕ-ТО НА ЭТОМ КРУГУ", 12, MUTED, true);
         targetText.setLetterSpacing(0.08f);
         targetCard.addView(targetText);
-        TextView goalHint = text("Ищи направление на циферблате", 14, WHITE, false);
+        TextView goalHint = text("Следуй за стрелкой — направление каждый раз новое", 14, WHITE, false);
         LinearLayout.LayoutParams hintParams = wrap();
         hintParams.topMargin = dp(5);
         targetCard.addView(goalHint, hintParams);
@@ -141,9 +141,9 @@ public class MainActivity extends Activity implements SensorEventListener {
     }
 
     private void newTarget() {
-        target = new Random().nextInt(360);
+        target = randomTarget(true);
         found = false;
-        targetText.setText("КОТ ПРЯЧЕТСЯ НА " + compassName(target).toUpperCase(Locale.ROOT));
+        targetText.setText("КОТ ГДЕ-ТО НА ЭТОМ КРУГУ");
         actionButton.setText("Новая цель  ↻");
         updateReadout();
         compassView.invalidate();
@@ -183,6 +183,10 @@ public class MainActivity extends Activity implements SensorEventListener {
         SensorManager.getOrientation(rotationMatrix, orientation);
         float degrees = (float) Math.toDegrees(orientation[0]);
         heading = (degrees + 360f) % 360f;
+        if (!firstTargetReady) {
+            target = randomTarget(false);
+            firstTargetReady = true;
+        }
         updateReadout();
         compassView.invalidate();
         float difference = signedDifference(target, Math.round(heading));
@@ -196,12 +200,12 @@ public class MainActivity extends Activity implements SensorEventListener {
             statusText.setText("Компас не найден — проверь датчики");
             return;
         }
-        headingText.setText(String.format(Locale.getDefault(), "%03d°", Math.round(heading) % 360));
+        float difference = signedDifference(target, Math.round(heading));
+        headingText.setText(Math.round(Math.abs(difference)) + "°");
         if (found) {
             statusText.setText("Кот найден! Мяу! Поищем ещё? 🐱");
             statusText.setTextColor(GREEN);
         } else {
-            float difference = signedDifference(target, Math.round(heading));
             if (Math.abs(difference) <= 10f) {
                 statusText.setText("Почти! Не отпускай телефон…");
             } else if (Math.abs(difference) < 35f) {
@@ -230,9 +234,14 @@ public class MainActivity extends Activity implements SensorEventListener {
         return ((destination - current + 540) % 360) - 180;
     }
 
-    private static String compassName(int degrees) {
-        String[] names = {"север", "северо-востоке", "востоке", "юго-востоке", "юге", "юго-западе", "западе", "северо-западе"};
-        return names[(int) Math.round(degrees / 45.0) % 8];
+    private int randomTarget(boolean avoidPrevious) {
+        for (int attempt = 0; attempt < 100; attempt++) {
+            int candidate = random.nextInt(360);
+            if (hasHeading && Math.abs(signedDifference(candidate, Math.round(heading))) < 45f) continue;
+            if (avoidPrevious && Math.abs(signedDifference(candidate, target)) < 60f) continue;
+            return candidate;
+        }
+        return random.nextInt(360);
     }
 
     @Override public void onAccuracyChanged(Sensor sensor, int accuracy) { }
@@ -264,7 +273,6 @@ public class MainActivity extends Activity implements SensorEventListener {
 
     private class CompassView extends View {
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        private final String[] cardinal = {"N", "E", "S", "W"};
 
         CompassView(Context context) {
             super(context);
@@ -298,13 +306,6 @@ public class MainActivity extends Activity implements SensorEventListener {
             paint.setTextAlign(Paint.Align.CENTER);
             paint.setTypeface(Typeface.DEFAULT_BOLD);
             paint.setTextSize(dp(14));
-            for (int i = 0; i < 4; i++) {
-                double a = Math.toRadians(i * 90 - 90 - heading);
-                float labelRadius = radius - dp(23);
-                paint.setColor(i == 0 ? ACCENT : MUTED);
-                canvas.drawText(cardinal[i], cx + (float) Math.cos(a) * labelRadius,
-                        cy + (float) Math.sin(a) * labelRadius + dp(5), paint);
-            }
 
             float relative = (float) signedDifference(target, Math.round(heading));
             double targetAngle = Math.toRadians(relative - 90);
