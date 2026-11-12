@@ -4,6 +4,6 @@
 
 ## Скачать APK
 
-В этом окружении нет Android SDK, поэтому APK нельзя собрать прямо на телефоне. В репозитории настроена GitHub Actions-сборка: после публикации проекта на GitHub открой **Actions → Build Android APK → Run workflow**, дождись завершения и скачай артефакт **kotokompas-apk**. Внутри будет `app-debug.apk`.
+В этом окружении нет Android SDK, поэтому APK нельзя собрать прямо на телефоне. В репозитории настроена GitHub Actions-сборка: после каждого push в `main` APK собирается автоматически. Номер версии увеличивается вместе с номером запуска сборки, чтобы новую версию можно было установить поверх старой. APK также можно собрать вручную через **Actions → Build Android APK → Run workflow**; скачай артефакт **kotokompas-apk**. Внутри будет `app-debug.apk`.
 
 Локальная сборка: `gradle assembleDebug` (нужны JDK 17, Android SDK 35 и Gradle 8.9).

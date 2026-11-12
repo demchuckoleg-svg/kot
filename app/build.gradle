@@ -10,7 +10,7 @@ android {
         applicationId 'com.kotokompas.app'
         minSdk 23
         targetSdk 34
-        versionCode 1
-        versionName '1.0'
+        versionCode (project.findProperty('appVersionCode')?.toString()?.toInteger() ?: 1)
+        versionName (project.findProperty('appVersionName')?.toString() ?: '1.0')
     }
 }

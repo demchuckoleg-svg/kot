@@ -286,7 +286,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             canvas.drawCircle(cx, cy, radius + dp(4), paint);
 
             for (int i = 0; i < 36; i++) {
-                double a = Math.toRadians(i * 10 - 90);
+                double a = Math.toRadians(i * 10 - 90 - heading);
                 float inner = radius - (i % 3 == 0 ? dp(10) : dp(5));
                 paint.setColor(i % 9 == 0 ? ACCENT : 0xFF697286);
                 paint.setStrokeWidth(i % 9 == 0 ? dp(2) : dp(1));
@@ -299,7 +299,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             paint.setTypeface(Typeface.DEFAULT_BOLD);
             paint.setTextSize(dp(14));
             for (int i = 0; i < 4; i++) {
-                double a = Math.toRadians(i * 90 - 90);
+                double a = Math.toRadians(i * 90 - 90 - heading);
                 float labelRadius = radius - dp(23);
                 paint.setColor(i == 0 ? ACCENT : MUTED);
                 canvas.drawText(cardinal[i], cx + (float) Math.cos(a) * labelRadius,
