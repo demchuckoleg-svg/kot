@@ -318,6 +318,8 @@ public class MainActivity extends Activity implements SensorEventListener {
             canvas.drawText("🐱", tx, ty + dp(4), paint);
 
             Path needle = new Path();
+            canvas.save();
+            canvas.rotate(relative, cx, cy);
             needle.moveTo(cx, cy - radius + dp(12));
             needle.lineTo(cx - dp(10), cy + dp(7));
             needle.lineTo(cx, cy + dp(2));
@@ -325,6 +327,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             needle.close();
             paint.setColor(WHITE);
             canvas.drawPath(needle, paint);
+            canvas.restore();
             paint.setColor(ACCENT);
             canvas.drawCircle(cx, cy, dp(5), paint);
 
